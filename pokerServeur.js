@@ -1,17 +1,66 @@
 const mongoClient = require('mongodb').MongoClient;
 const safeJsonStringify = require('safe-json-stringify');
 const express = require('express');
-
+const createStats = require('./modules/createStatistics.js')
 const http = require('http');
-const app = express();
+const bodyParser = require("body-parser");
+const cors = require('cors');
 
-app.get('/',(async function(req, res){
+const app = express();
+const createStatsObj = new createStats();
+
+app.use(cors({origin: '*'}));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(express.json({
+  type: ['application/json', 'text/plain']
+}))
+
+app.get('/',async function(req,res){
   res.setHeader('Content-type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  const items = await connectDB();
-  res.send(safeJsonStringify(items));
-}))
-app.listen(8080);
+  //const items = await connectDB();
+  res.send(safeJsonStringify("lala"));
+});
+app.post('/dataGame',async function(req,res, next){
+
+  console.log(req.body);
+  res.setHeader('Content-type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Accept','application/json')
+    await next()
+  //const items = await connectDB();
+  res.send(req.body);
+});
+app.listen(8080,function(){
+  console.log("Started on PORT 8080");
+})
+/*app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json);
+
+app.get('/',(async function(req, res){
+  //console.log(req.body);
+  res.setHeader('Content-type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  //const items = await connectDB();
+  res.send(safeJsonStringify("lala"));
+  })
+)
+
+app.post('/sendData',(function(req, res){
+  console.log(req);
+  res.setHeader('Content-type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Accept','application/json')
+  //const items = await connectDB();
+  res.send(safeJsonStringify({try : "lol"}));
+  //res.end(safeJsonStringify("lol"))
+  })
+)
+app.listen(8080);*/
 
 
 function connectDB(){
@@ -24,68 +73,19 @@ function connectDB(){
           return console.error('Connection failed, err');
         }
 
-        let db = client.db("Pokerstats");
-        //let table = allCardsWithRecursion(3, {value : 0, symbol : "basic", child : 1})
+        let db = client.db("config");
 
-        db.collection("pokerCollection").insertOne({"allTheCardsLooped":  allCardsWithRecursionStringed(1, "")})
+
+        /*for(let i = 0; i < 52; i++){
+          let table = { i:  allCardsWithRecursionStringed(3,[])}
+
+        db.collection("try").insertOne(table)
         .then(result => console.log(`Successfully inserted item with _id: ${result.insertedId}`))
         .catch(err => console.error(`Failed to insert item: ${err}`))
-
-        resolve(/*db.collection("pokerCollection").findOne("value" : )*/"lala")
+      }*/
+        resolve(createStatsObj.allCardsTable())
+        //resolve(/*db.collection("pokerCollection").findOne("value" : )*/"lala")
         client.close();
       });
     })
-}
-
-function allCardsTable(){
-
-  let cards = [];
-  const values = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
-  const symbols = ["Clover","Spade","Heart","Diamond"];
-  for(const val of values){
-    for(const sym of symbols){
-      cards.push({value : val, symbol : sym, child : []})
-    }
-  }
-  return cards;
-}
-
-function allCardsWithRecursion(nbLoop, card){
-
-  if(nbLoop == 0){
-    return null;
-  } else {
-    card.child = allCardsTable();
-    for(const oneCard of card.child){
-      allCardsWithRecursion(nbLoop - 1, oneCard);
-    }
-  }
-  return card;
-}
-
-function allCardsTableStringed(currentString = ""){
-  let cards = [];
-  const values = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
-  const symbols = ["C","S","H","D"];
-  for(const val of values){
-    for(const sym of symbols){
-      cards.push(currentString + val + sym)
-    }
-  }
-  return cards;
-}
-function allCardsWithRecursionStringed(nbLoop, currentString){
-
-  if(nbLoop == 0){
-    let a = [currentString]
-    console.log(a)
-    return a
-  } else {
-    let newTable = allCardsTableStringed(currentString);
-    for(const oneCard in newTable){
-      newTable[oneCard] = allCardsWithRecursionStringed(nbLoop - 1, newTable[oneCard]);
-    }
-    console.log(newTable)
-    return [].concat(newTable[0]);
-  }
 }
